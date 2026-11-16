@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Steal An Egg — Guide, Eggs, Stats &amp; Updates</title>
+  <meta name="description" content="Independent fan guide for the Roblox game Steal An Egg: beginner route, egg index, game passes, badges, live player stats and the latest event." />
+  <meta name="theme-color" content="#140f2e" />
+  <meta name="color-scheme" content="dark light" />
+  <script>
+    // Resolve the theme before first paint (no flash). Preference: 'system' | 'light' | 'dark'.
+    (function () {
+      var pref = 'system';
+      try { pref = localStorage.getItem('sae-theme') || 'system'; } catch (e) {}
+      var dark = pref === 'dark' || (pref === 'system' && !matchMedia('(prefers-color-scheme: light)').matches);
+      document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+      document.documentElement.dataset.themePref = pref;
+    })();
+  </script>
+  <meta property="og:title" content="Steal An Egg — Fan Guide" />
+  <meta property="og:description" content="Collect eggs, hatch pets, earn money, train Speed — and raid rival nests. Guides, egg index and live stats." />
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <a class="skip" href="#main">Skip to content</a>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <canvas id="world" aria-hidden="true"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div class="loader" id="loader" aria-hidden="true">
+    <div class="loader-egg"></div>
+    <p>Sneaking past the lasers…</p>
+  </div>
+
+  <header class="nav" id="nav">
+    <a class="brand" href="#top" aria-label="StealAnEgg.net home">
+      <span class="brand-egg" aria-hidden="true"></span>StealAnEgg<span class="tld">.net</span>
+    </a>
+    <nav id="nav-links" class="nav-links" aria-label="Primary">
+      <a href="#guide">Beginner Guide</a>
+      <a href="#eggs">Egg Index</a>
+      <a href="#passes">Game Passes</a>
+      <a href="#event">Updates</a>
+      <a href="#faq">FAQ</a>
+      <a class="btn btn-gold nav-play-mobile" href="https://www.roblox.com/games/107778070777162" target="_blank" rel="noopener">Play on Roblox</a>
+    </nav>
+    <div class="theme-switch" role="radiogroup" aria-label="Color theme" id="theme-switch">
+      <button type="button" role="radio" data-theme-pref="system" aria-checked="true" aria-label="Match device" title="Match device">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>
+      </button>
+      <button type="button" role="radio" data-theme-pref="light" aria-checked="false" aria-label="Light mode" title="Light mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+      <button type="button" role="radio" data-theme-pref="dark" aria-checked="false" aria-label="Dark mode" title="Dark mode">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+      </button>
+    </div>
+    <a class="btn btn-gold nav-play" href="https://www.roblox.com/games/107778070777162" target="_blank" rel="noopener">Play on Roblox</a>
+    <button class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <main id="main">
+    <!-- HERO -->
+    <section id="top" class="scene hero" data-cam="hero">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot"></span> Independent fan guide · Roblox</p>
+        <h1 class="title">
+          <span class="t1">Steal</span>
+          <span class="t2">An&nbsp;Egg<span class="bang">!</span></span>
+        </h1>
+        <p class="lead">Collect eggs, hatch pets, earn money and train your Speed, then raid rival nests before they raid yours.</p>
+        <div class="cta">
+          <a class="btn btn-gold btn-lg" href="https://www.roblox.com/games/107778070777162" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+            Play on Roblox
+          </a>
+          <a class="btn btn-ghost btn-lg" href="#guide">Beginner guide</a>
+        </div>
+        <ul class="hero-stats" aria-label="Live game stats">
+          <li><b data-stat="playing" data-short>2.2M</b><span>playing now</span></li>
+          <li><b data-stat="visits" data-short>5.3B</b><span>visits</span></li>
+          <li><b data-stat="rating" data-suffix="%">92.7%</b><span>liked</span></li>
+        </ul>
+      </div>
+      <p class="hint" data-ui><span class="hint-egg"></span>Tap the floating eggs to steal them. The golden one in the nest is guarded…</p>
+      <a class="scroll-cue" href="#event" aria-label="Scroll to latest event"><span></span></a>
+    </section>
+
+    <!-- EVENT -->
+    <section id="event" class="scene align-right" data-cam="event">
+      <article class="panel reveal">
+        <p class="tag tag-hot">Latest listed event</p>
+        <h2>Dr. Scramble's Revenge</h2>
+        <p class="when">
+          <time datetime="2026-09-26T15:00Z">Sep 26, 3:00 PM UTC</time> →
+          <time datetime="2026-09-27T16:00Z">Sep 27, 4:00 PM UTC</time>
+        </p>
+        <ul class="ticks">
+          <li><b>Mech boss.</b> Guides report a boss roughly every 30 minutes. Rewards are unconfirmed.</li>
+          <li><b>Drone waves</b> and the <b>Experiment Shop</b> are part of the event.</li>
+          <li><b>Five Vault Parts</b> carried over from the September 19 event.</li>
+        </ul>
+        <p class="note">These are listing dates, not a live availability check. Confirm in-game.</p>
+      </article>
+    </section>
+
+    <!-- STATS -->
+    <section id="stats" class="scene align-wide" data-cam="stats">
+      <div class="section-head reveal">
+        <p class="tag" id="stats-badge">Snapshot · Sep 26, 2026</p>
+        <h2>Status at a glance</h2>
+      </div>
+      <div class="stat-grid">
+        <div class="panel stat reveal"><b data-stat="playing">2,196,742</b><span>Active players</span></div>
+        <div class="panel stat reveal"><b data-stat="visits">5,336,476,160</b><span>Total visits</span></div>
+        <div class="panel stat reveal"><b data-stat="favorites">5,734,145</b><span>Favorites</span></div>
+        <div class="panel stat reveal"><b data-stat="rating" data-suffix="%">92.7%</b><span>Positive votes · <i data-stat="upVotes">2,789,416</i> up</span></div>
+        <div class="panel stat reveal"><b data-stat="maxPlayers">7</b><span>Max players per server</span></div>
+        <div class="panel stat reveal"><b class="stat-text">None</b><span>Verified active codes</span></div>
+      </div>
+      <p class="ids reveal">Universe <code>10563114921</code> · Root place <code>107778070777162</code> · Desktop, Console, Mobile &amp; Tablet</p>
+    </section>
+
+    <!-- LOOP -->
+    <section id="loop" class="scene align-left" data-cam="loop">
+      <div class="section-head reveal">
+        <p class="tag">Verified gameplay loop</p>
+        <h2>Steal. Hatch. Hustle.</h2>
+      </div>
+      <div class="loop">
+        <article class="panel loop-card reveal" style="--c: var(--gold)">
+          <span class="loop-ico" aria-hidden="true">🥚</span>
+          <h3>Collect &amp; hatch</h3>
+          <p>Steal eggs from pets, hatch them, and discover rarer traits like egg sizes and mutations.</p>
+        </article>
+        <article class="panel loop-card reveal" style="--c: var(--mint)">
+          <span class="loop-ico" aria-hidden="true">💰</span>
+          <h3>Earn &amp; upgrade</h3>
+          <p>Pets earn money. Spend it to upgrade your treadmill and your base.</p>
+        </article>
+        <article class="panel loop-card reveal" style="--c: var(--pink)">
+          <span class="loop-ico" aria-hidden="true">⚡</span>
+          <h3>Train &amp; compete</h3>
+          <p>Train Speed on the treadmill, then steal from other players in multiplayer servers.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- GUIDE -->
+    <section id="guide" class="scene align-right" data-cam="guide">
+      <div class="panel reveal">
+        <p class="tag">Beginner route</p>
+        <h2>Your first heist in 6 steps</h2>
+        <ol class="steps">
+          <li><b>Open the verified experience.</b><span>Use the official Roblox page so you don't land on a copycat.</span></li>
+          <li><b>Place an egg and hatch a pet.</b><span>Your first pet starts the money loop.</span></li>
+          <li><b>Build the earning loop.</b><span>More pets means more money. Reinvest it in your base.</span></li>
+          <li><b>Train Speed.</b><span>Upgrade the treadmill. Speed lets you grab and escape.</span></li>
+          <li><b>Prepare for competition.</b><span>Protect your nest before heading out to steal.</span></li>
+          <li><b>Track collection progress.</b><span>Hunt rare sizes, mutations and badges.</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- EGGS -->
+    <section id="eggs" class="scene align-left" data-cam="eggs">
+      <div class="panel egg-panel reveal">
+        <p class="tag">Egg index</p>
+        <h2>Known eggs</h2>
+        <div class="egg-tabs" role="tablist" aria-label="Choose an egg">
+          <button role="tab" aria-selected="true" data-egg="yeti" style="--c:#9fd6ff">Yeti</button>
+          <button role="tab" aria-selected="false" data-egg="trex" style="--c:#8ee26a">Trex</button>
+          <button role="tab" aria-selected="false" data-egg="phoenix" style="--c:#ff7a3a">Eternal Phoenix</button>
+        </div>
+        <div class="egg-info" id="egg-info" role="tabpanel" aria-live="polite">
+          <h3 id="egg-name">Yeti Egg</h3>
+          <p id="egg-desc">Frosty fur and an ice-crystal crown.</p>
+        </div>
+        <p class="note">Egg names come from official artwork only. Availability, rarity, odds and location are <b>not verified</b>. The 3D eggs here are our own fan renders.</p>
+      </div>
+    </section>
+
+    <!-- PASSES + BADGES -->
+    <section id="passes" class="scene align-wide" data-cam="passes">
+      <div class="section-head reveal">
+        <p class="tag">Checked Sep 5, 2026</p>
+        <h2>Game passes &amp; badges</h2>
+      </div>
+      <div class="pass-grid">
+        <article class="panel pass reveal">
+          <div class="pass-badge" style="--c: var(--mint)">x2</div>
+          <div>
+            <h3>X2 MONEY!</h3>
+            <p>Earn x2 more money.</p>
+          </div>
+          <p class="price"><span class="robux" aria-hidden="true"></span>399 <small>Robux</small></p>
+        </article>
+        <article class="panel pass reveal">
+          <div class="pass-badge" style="--c: var(--pink)">x2</div>
+          <div>
+            <h3>X2 GROWTH SPEED!</h3>
+            <p>Eggs grow x2 faster.</p>
+          </div>
+          <p class="price"><span class="robux" aria-hidden="true"></span>467 <small>Robux</small></p>
+        </article>
+      </div>
+      <div class="panel badges reveal">
+        <h3>Badges <small>(total awards, checked snapshot)</small></h3>
+        <ul class="badge-list">
+          <li><span>WELCOME!</span><span class="bar" style="--w:100%"></span><b>13,357,711</b></li>
+          <li><span>Hatched Secret!</span><span class="bar" style="--w:14.5%"></span><b>1,943,082</b></li>
+          <li><span>Hatched Eternal!</span><span class="bar" style="--w:7.5%"></span><b>1,001,335</b></li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq" class="scene align-right" data-cam="faq">
+      <div class="panel reveal">
+        <p class="tag">FAQ</p>
+        <h2>Quick answers</h2>
+        <div class="faq">
+          <details>
+            <summary>What should a new player do first?</summary>
+            <p>Open the verified experience, place an egg and hatch your first pet. Then reinvest what your pets earn into the treadmill and base before trying to steal.</p>
+          </details>
+          <details>
+            <summary>How do pets make money?</summary>
+            <p>Hatched pets earn money for you over time. Spend it on base and treadmill upgrades. Exact earning rates aren't published, so check in-game.</p>
+          </details>
+          <details>
+            <summary>How does pet fusion work?</summary>
+            <p>Fusion details aren't verified from official sources yet. Treat community claims as leads, and check the in-game UI and official update notes.</p>
+          </details>
+          <details>
+            <summary>Are there active codes?</summary>
+            <p>No. No verified code string or redemption interface has been found. Be careful with "free codes" sites.</p>
+          </details>
+          <details>
+            <summary>Is there an official Discord?</summary>
+            <p>Only trust community links shown on the game's official Roblox page. If a link isn't there, assume it's unofficial.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <a class="brand" href="#top"><span class="brand-egg" aria-hidden="true"></span>StealAnEgg<span class="tld">.net</span></a>
+      <p>Independent fan guide. Not affiliated with, endorsed by or sponsored by Roblox Corporation or the game's developer. Information is checked against public sources, and game data can change.</p>
+      <nav aria-label="Footer">
+        <a href="https://www.roblox.com/games/107778070777162" target="_blank" rel="noopener">Official Roblox page</a>
+        <a href="#guide">Guide</a>
+        <a href="#eggs">Eggs</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <small>© <span id="year">2026</span> StealAnEgg.net</small>
+    </div>
+  </footer>
+
+  <div class="hud" id="hud" data-ui aria-live="polite">
+    <span class="hud-egg" aria-hidden="true"></span>
+    <span><b id="stolen">0</b> stolen</span>
+    <span class="hud-rank" id="rank">Rookie</span>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
