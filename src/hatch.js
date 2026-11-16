@@ -236,6 +236,11 @@ export function createHatch({ scene, prize, geo, profile, eggMaterial, dotTex, l
   // white angel slightly dimmed so bloom only catches the moving shine, not the whole body
   const angelWhite = makeAngel(angelUrls.white, '#ffc861', '#fff3d6', 0.95, 1.6);
   const angelBlack = makeAngel(angelUrls.black, '#b56bff', '#f0d6ff');
+  // Where the character's body centre (u, 0–1 from the left) and feet (v, 0–1 from the bottom) are
+  // inside each cut-out PNG — the spear/aura make the images off-centre. Measured from
+  // src/assets/archangel-*.png; re-measure if those images change.
+  angelWhite.userData.anchor = { u: 0.527, v: 0.044 };
+  angelBlack.userData.anchor = { u: 0.519, v: 0.027 };
 
   // twinkling star sparkles drifting up around the angel
   const sparkN = lowPower ? 40 : 90;
@@ -341,8 +346,12 @@ export function createHatch({ scene, prize, geo, profile, eggMaterial, dotTex, l
       for (const [s, op] of [[angelWhite, 1 - k], [angelBlack, k]]) {
         if (op > 0.01 && !s.userData.requested) { s.userData.requested = true; s.userData.load(); }
         s.visible = rise > 0.001 && op > 0.01;
-        s.scale.set(h * (s.userData.aspect || 1) * PAD, h * PAD, 1);
-        s.position.set(0, base.y + yLift - h * (PAD - 1) * 0.5, 0);
+        const aspect = s.userData.aspect || 1;
+        const { u: au, v: av } = s.userData.anchor;
+        s.scale.set(h * aspect * PAD, h * PAD, 1);
+        // stand in the centre of the nest ring: body centre on the nest axis, feet on the nest
+        const dx = (au - 0.5) * h * aspect;
+        s.position.set(-dx * Math.cos(yaw), base.y + yLift - ((av - 0.5) * h + 0.5 * h * PAD), dx * Math.sin(yaw));
         s.rotation.set(0, yaw, 0);
         const u = s.material.uniforms;
         u.opacity.value = rise * op;
