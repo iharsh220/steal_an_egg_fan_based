@@ -8,7 +8,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "egg": "node scripts/extract-egg.mjs"
+    "egg": "node scripts/extract-egg.mjs",
+    "assets": "node scripts/fetch-roblox-assets.mjs"
   },
   "dependencies": {
     "three": "0.170.0"

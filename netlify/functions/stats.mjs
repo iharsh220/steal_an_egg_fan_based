@@ -1,20 +1,11 @@
 // Netlify Function (Node.js) — GET /api/stats
-// Proxies Roblox's public games API (which browsers can't call directly because of CORS)
-// and returns a small JSON payload. Falls back to the last checked snapshot on failure.
+// Proxies Roblox's public APIs (browsers can't call them directly because of CORS) and returns
+// live game stats, badge award counts and game-pass prices. Anything that fails falls back to the
+// snapshot in src/data/roblox.json (refresh it with `npm run assets`).
 
-const UNIVERSE_ID = '10563114921';
+import SNAPSHOT from '../../src/data/roblox.json';
 
-export const SNAPSHOT = {
-  live: false,
-  checkedAt: '2026-09-26',
-  playing: 2196742,
-  visits: 5336476160,
-  favorites: 5734145,
-  upVotes: 2789416,
-  downVotes: null,
-  rating: 92.7,
-  maxPlayers: 7,
-};
+const UNIVERSE_ID = SNAPSHOT.universeId;
 
 async function getJson(url) {
   const res = await fetch(url, {
@@ -26,38 +17,41 @@ async function getJson(url) {
 }
 
 export default async function handler() {
-  let body;
-  try {
-    const [games, votes] = await Promise.all([
-      getJson(`https://games.roblox.com/v1/games?universeIds=${UNIVERSE_ID}`),
-      getJson(`https://games.roblox.com/v1/games/votes?universeIds=${UNIVERSE_ID}`).catch(() => null),
-    ]);
-    const g = games?.data?.[0];
-    if (!g) throw new Error('No game data');
-    const v = votes?.data?.[0];
-    const up = v ? v.upVotes : SNAPSHOT.upVotes;
-    const down = v ? v.downVotes : null;
-    body = {
-      live: true,
-      checkedAt: new Date().toISOString(),
-      playing: g.playing,
-      visits: g.visits,
-      favorites: g.favoritedCount,
-      maxPlayers: g.maxPlayers,
-      upVotes: up,
-      downVotes: down,
-      rating: v && up + down > 0 ? Math.round((up / (up + down)) * 1000) / 10 : SNAPSHOT.rating,
-      updated: g.updated,
-    };
-  } catch (err) {
-    body = { ...SNAPSHOT, error: 'live-unavailable' };
-  }
+  const [games, votes, badges, passes] = await Promise.allSettled([
+    getJson(`https://games.roblox.com/v1/games?universeIds=${UNIVERSE_ID}`),
+    getJson(`https://games.roblox.com/v1/games/votes?universeIds=${UNIVERSE_ID}`),
+    getJson(`https://badges.roblox.com/v1/universes/${UNIVERSE_ID}/badges?limit=100&sortOrder=Asc`),
+    getJson(`https://apis.roblox.com/game-passes/v1/universes/${UNIVERSE_ID}/game-passes?passView=Full&pageSize=50`),
+  ]);
+
+  const g = games.status === 'fulfilled' ? games.value?.data?.[0] : null;
+  const v = votes.status === 'fulfilled' ? votes.value?.data?.[0] : null;
+  const s = SNAPSHOT.stats;
+
+  const body = {
+    live: !!g,
+    checkedAt: g ? new Date().toISOString() : SNAPSHOT.checkedAt,
+    playing: g?.playing ?? s.playing,
+    visits: g?.visits ?? s.visits,
+    favorites: g?.favoritedCount ?? s.favorites,
+    maxPlayers: g?.maxPlayers ?? s.maxPlayers,
+    updated: g?.updated ?? s.updated,
+    upVotes: v?.upVotes ?? s.upVotes,
+    downVotes: v?.downVotes ?? s.downVotes,
+    rating: v && v.upVotes + v.downVotes > 0 ? Math.round((v.upVotes / (v.upVotes + v.downVotes)) * 1000) / 10 : s.rating,
+    // live award counts keyed by badge id (the page already has names + icons from the snapshot)
+    badges: badges.status === 'fulfilled'
+      ? Object.fromEntries(badges.value.data.map((b) => [b.id, { awarded: b.statistics?.awardedCount, enabled: b.enabled, name: b.name }]))
+      : null,
+    passes: passes.status === 'fulfilled'
+      ? Object.fromEntries(passes.value.gamePasses.map((p) => [p.id, { price: p.price, forSale: p.isForSale, name: p.name }]))
+      : null,
+  };
 
   return new Response(JSON.stringify(body), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      // browsers: 60s, Netlify edge cache: 2 min (keeps Roblox API calls low)
       'cache-control': 'public, max-age=60',
       'netlify-cdn-cache-control': 'public, s-maxage=120, stale-while-revalidate=300',
     },

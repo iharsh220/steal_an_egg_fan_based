@@ -3,6 +3,10 @@
   publish = "dist"
   functions = "netlify/functions"
 
+[functions]
+  # bundle with esbuild so the function can import src/data/roblox.json
+  node_bundler = "esbuild"
+
 [build.environment]
   NODE_VERSION = "20"
 

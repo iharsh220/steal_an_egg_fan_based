@@ -19,6 +19,15 @@ const SHOTS = {
   eggs: { pos: [3.6, 3.1, 6.2], look: [0, 1.5, 0], off: 0.2 },
   passes: { pos: [-14, 10, 12], look: [0, 0, 0], off: 0 },
   faq: { pos: [10, 4.5, -12], look: [0, 1, 0], off: -0.2 },
+  // wide (card-grid) sections: island centred behind the cards
+  tasks: { pos: [-11, 12, 13], look: [0, -1, 0], off: 0 },
+  glance: { pos: [14, 8, 6], look: [0, 0, 0], off: 0 },
+  hub: { pos: [-15, 6, -4], look: [0, 0.5, 0], off: 0 },
+  known: { pos: [6, 13, 15], look: [0, 0, 0], off: 0 },
+  badges: { pos: [-8, 4, 15], look: [0, 1.2, 0], off: 0 },
+  platforms: { pos: [16, 11, -6], look: [0, 0, 0], off: 0 },
+  evidence: { pos: [-3, 17, -12], look: [0, 0, 0], off: 0 },
+  cta: { pos: [0.5, 3.5, 11], look: [0, 1.6, 0], off: 0 },
 };
 
 const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -85,7 +94,6 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
       // includes tone mapping + colour-space chunks so the sky looks the same with or without bloom
       fragmentShader: `#include <common>
-        #include <tonemapping_pars_fragment>
         uniform vec3 top, mid, glow, low; varying vec3 vP;
         void main(){ float h = vP.y;
           vec3 c = mix(low, mid, smoothstep(-0.45, 0.0, h));

@@ -1,0 +1,117 @@
+{
+  "checkedAt": "2026-11-16",
+  "universeId": "10563114921",
+  "placeId": "107778070777162",
+  "creator": "and Collect Rare Pets",
+  "stats": {
+    "playing": 697736,
+    "visits": 11345075881,
+    "favorites": 9954381,
+    "maxPlayers": 7,
+    "upVotes": 4216020,
+    "downVotes": 400151,
+    "rating": 91.3,
+    "updated": "2026-11-15T18:41:54.449Z"
+  },
+  "badges": [
+    {
+      "id": 2590480615884365,
+      "name": "WELCOME!",
+      "enabled": true,
+      "awarded": 287339013,
+      "created": "2026-07-25",
+      "icon": "/images/badges/welcome.png",
+      "url": "https://www.roblox.com/badges/2590480615884365/welcome"
+    },
+    {
+      "id": 4448343437950888,
+      "name": "Hatched Eternal!",
+      "enabled": true,
+      "awarded": 68392764,
+      "created": "2026-07-25",
+      "icon": "/images/badges/hatched-eternal.png",
+      "url": "https://www.roblox.com/badges/4448343437950888/hatched-eternal"
+    },
+    {
+      "id": 383815774941459,
+      "name": "Hatched Secret!",
+      "enabled": true,
+      "awarded": 101248424,
+      "created": "2026-07-25",
+      "icon": "/images/badges/hatched-secret.png",
+      "url": "https://www.roblox.com/badges/383815774941459/hatched-secret"
+    },
+    {
+      "id": 1521646775064072,
+      "name": "Hatched Divine!",
+      "enabled": true,
+      "awarded": 14633899,
+      "created": "2026-07-25",
+      "icon": "/images/badges/hatched-divine.png",
+      "url": "https://www.roblox.com/badges/1521646775064072/hatched-divine"
+    },
+    {
+      "id": 1701163841407856,
+      "name": "Divine Trail!",
+      "enabled": true,
+      "awarded": 29102640,
+      "created": "2026-07-25",
+      "icon": "/images/badges/divine-trail.png",
+      "url": "https://www.roblox.com/badges/1701163841407856/divine-trail"
+    },
+    {
+      "id": 2940582970403757,
+      "name": "Angelic Treadmill!",
+      "enabled": true,
+      "awarded": 20300858,
+      "created": "2026-07-25",
+      "icon": "/images/badges/angelic-treadmill.png",
+      "url": "https://www.roblox.com/badges/2940582970403757/angelic-treadmill"
+    },
+    {
+      "id": 1123072533658443,
+      "name": "The Hollow 26",
+      "enabled": true,
+      "awarded": 8229712,
+      "created": "2026-10-20",
+      "icon": "/images/badges/the-hollow-26.png",
+      "url": "https://www.roblox.com/badges/1123072533658443/the-hollow-26"
+    },
+    {
+      "id": 4147949174938817,
+      "name": "The Jonas Brother Concert",
+      "enabled": true,
+      "awarded": 7374369,
+      "created": "2026-10-21",
+      "icon": "/images/badges/the-jonas-brother-concert.png",
+      "url": "https://www.roblox.com/badges/4147949174938817/the-jonas-brother-concert"
+    }
+  ],
+  "passes": [
+    {
+      "id": 1935039424,
+      "name": "X2 MONEY!",
+      "desc": "Earn x2 more money!",
+      "price": 299,
+      "forSale": true,
+      "icon": "/images/passes/x2-money.png",
+      "url": "https://www.roblox.com/game-pass/1935039424/x2-money"
+    },
+    {
+      "id": 1931468161,
+      "name": "X2 GROWTH SPEED!",
+      "desc": "Eggs grow x2 faster!",
+      "price": 467,
+      "forSale": true,
+      "icon": "/images/passes/x2-growth-speed.png",
+      "url": "https://www.roblox.com/game-pass/1931468161/x2-growth-speed"
+    }
+  ],
+  "art": [
+    "/images/art/thumb-1.webp",
+    "/images/art/thumb-2.webp",
+    "/images/art/thumb-3.webp",
+    "/images/art/thumb-4.webp"
+  ],
+  "icon": "/images/art/game-icon.webp"
+}

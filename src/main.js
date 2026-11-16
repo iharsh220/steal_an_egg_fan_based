@@ -1,4 +1,6 @@
 import './styles.css';
+import { hydrateIcons, svg } from './icons.js';
+import ROBLOX from './data/roblox.json';
 
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
@@ -83,6 +85,54 @@ function onScroll() {
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
+// ---------- Hide Netlify's injected "nl-badge" (and similar) if it ever appears ----------
+const KEEP = 'main,header,footer,dialog,canvas,script,.hud,.toast,.loader,.progress,.vignette,.skip';
+const isNlBadge = (el) => el.nodeType === 1 && /nl-badge/i.test(`${el.tagName} ${el.id} ${typeof el.className === 'string' ? el.className : ''}`);
+const dropBadge = (el) => { if (!el.matches(KEEP)) el.remove(); };
+const sweepBadges = () => document.querySelectorAll('body > *').forEach((el) => {
+  if (isNlBadge(el) || el.querySelector('[id*="nl-badge" i],[class*="nl-badge" i],nl-badge')) dropBadge(el);
+});
+sweepBadges();
+new MutationObserver((muts) => muts.forEach((m) => m.addedNodes.forEach((n) => {
+  if (isNlBadge(n)) dropBadge(n);
+  else if (n.nodeType === 1 && n.parentNode === document.body) sweepBadges();
+}))).observe(document.documentElement, { childList: true, subtree: true });
+
+// ---------- Badges + game passes (official data from src/data/roblox.json, refreshed by `npm run assets`) ----------
+const nf = new Intl.NumberFormat('en-US');
+const fmtDate = (d) => new Date(d.length === 10 ? `${d}T12:00:00Z` : d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+const words = ['Zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten'];
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function renderOfficial() {
+  $('#badge-count').textContent = ROBLOX.badges.length;
+  $('#badge-grid').innerHTML = ROBLOX.badges.map((b) => `
+    <article class="panel badge-card reveal">
+      <div class="badge-img">${b.icon ? `<img src="${b.icon}" width="150" height="150" loading="lazy" alt="${esc(b.name)} badge icon" />` : svg('trophy')}</div>
+      <span class="src-tag">${svg('check')}Official source</span>
+      <h3>${esc(b.name)}</h3>
+      <p><b data-badge-awards="${b.id}">${nf.format(b.awarded)}</b> total awards</p>
+      <p class="meta">Created ${fmtDate(b.created)}${b.enabled ? '' : ' · disabled'}</p>
+      <a class="card-link" href="${b.url}" target="_blank" rel="noopener">Official badge page ${svg('external')}</a>
+    </article>`).join('');
+  $('#pass-count').textContent = words[ROBLOX.passes.length] || ROBLOX.passes.length;
+  $('#pass-grid').innerHTML = ROBLOX.passes.map((p) => `
+    <article class="panel pass-card reveal">
+      <div class="pass-img">${p.icon ? `<img src="${p.icon}" width="150" height="150" loading="lazy" alt="${esc(p.name)} game pass icon" />` : svg('ticket')}</div>
+      <div class="pass-body">
+        <span class="src-tag">${svg('ticket')}Roblox game pass</span>
+        <h3>${esc(p.name)}</h3>
+        <p>${esc(p.desc)}</p>
+        <div class="price-row"><span>Snapshot price</span><b><span class="robux" aria-hidden="true"></span><span data-pass-price="${p.id}">${nf.format(p.price)}</span> <small>Robux</small></b></div>
+        <p class="meta" data-pass-checked>Checked ${fmtDate(ROBLOX.checkedAt)}</p>
+        <a class="card-link" href="${p.url}" target="_blank" rel="noopener">Roblox pass page ${svg('external')}</a>
+      </div>
+    </article>`).join('');
+  const sb = $('#stats-badge');
+  if (sb) sb.textContent = `Snapshot checked ${fmtDate(ROBLOX.checkedAt)}`;
+}
+renderOfficial();
+hydrateIcons();
+
 // ---------- Reveal on scroll ----------
 const io = new IntersectionObserver(
   (entries) => entries.forEach((en) => { if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); } }),
@@ -117,6 +167,14 @@ async function loadStats() {
     if (res.ok && (res.headers.get('content-type') || '').includes('json')) data = await res.json();
   } catch { /* offline: keep the HTML snapshot */ }
   if (!data) return;
+  // live badge award counts + pass prices
+  if (data.badges) $$('[data-badge-awards]').forEach((el) => { const b = data.badges[el.dataset.badgeAwards]; if (b?.awarded) el.textContent = nf.format(b.awarded); });
+  if (data.passes) {
+    $$('[data-pass-price]').forEach((el) => { const p = data.passes[el.dataset.passPrice]; if (p?.price) el.textContent = nf.format(p.price); });
+    $$('[data-pass-checked]').forEach((el) => (el.textContent = `Checked live · ${fmtDate(new Date().toISOString())}`));
+  }
+  $$('[data-date="updated"]').forEach((el) => data.updated && (el.textContent = fmtDate(data.updated)));
+  if (data.live) $$('[data-checked]').forEach((el) => (el.textContent = `Live from Roblox · ${fmtDate(new Date().toISOString())}`));
   const badge = $('#stats-badge');
   if (data.live) {
     badge.innerHTML = '<span class="live-dot"></span> Live from Roblox';
@@ -183,9 +241,9 @@ function onGuarded() {
 
 // ---------- Egg index ----------
 const EGGS = {
-  yeti: { name: 'Yeti Egg', desc: 'Frosty fur and an ice-crystal crown.' },
-  trex: { name: 'Trex Egg', desc: 'Scaly green shell with orange spots and a row of teeth.' },
-  phoenix: { name: 'Eternal Phoenix Egg', desc: 'Fiery orange shell with flame wings. This 3D model is generated from egg artwork.' },
+  yeti: { name: 'Yeti Egg', desc: 'Fan render: frosty fur and an ice-crystal crown.' },
+  trex: { name: 'Trex Egg', desc: 'Fan render: scaly shell with spots and a row of teeth.' },
+  phoenix: { name: 'Eternal Phoenix Egg', desc: 'Fiery orange shell with flame wings. This 3D model is generated from the official artwork.' },
 };
 
 // ---------- 3D world (lazy-loaded so text paints first) ----------
@@ -228,6 +286,12 @@ $$('[data-egg]').forEach((btn) => {
     world?.setFeatured(btn.dataset.egg);
   });
 });
+
+// "View in 3D" on the artwork cards → jump to the 3D viewer with that egg selected
+$$('[data-show-egg]').forEach((btn) => btn.addEventListener('click', () => {
+  $(`[data-egg="${btn.dataset.showEgg}"]`)?.click();
+  $('#eggs').scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center' });
+}));
 
 // show the selected egg when the Egg Index scrolls into view; restore the golden prize when leaving
 let eggsVisible = false;

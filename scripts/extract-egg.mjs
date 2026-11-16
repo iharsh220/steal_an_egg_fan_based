@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Turns a picture of an egg into a 3D egg for the site.
 //
-//   npm run egg                          # uses egg-source/egg.jpeg
+//   npm run egg                          # uses egg-source/phoenix-official.png
 //   npm run egg -- path/to/my-egg.png    # any JPG/PNG
 //
 // How it works:
@@ -20,7 +20,7 @@ import { PNG } from 'pngjs';
 
 const args = process.argv.slice(2);
 const opt = Object.fromEntries(args.filter((a) => a.startsWith('--')).map((a) => a.slice(2).split('=')));
-const input = args.find((a) => !a.startsWith('--')) || 'egg-source/egg.jpeg';
+const input = args.find((a) => !a.startsWith('--')) || 'egg-source/phoenix-official.png';
 const outDir = 'src/assets';
 const [hueLo, hueHi] = (opt.hue || '345-52').split('-').map(Number);
 const minSat = Number(opt.sat ?? 0.42);
