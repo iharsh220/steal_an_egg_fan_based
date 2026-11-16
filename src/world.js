@@ -1,6 +1,12 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
-import { eggGeometry, eggMaterial } from './eggs.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
+import { eggMaterial, profileGeometry, loadImage, imageTexture, hueVariants } from './eggs.js';
+import eggProfile from './assets/egg-profile.json';
+import eggTexUrl from './assets/egg-texture.jpg';
 
 // Camera stops, keyed by each section's data-cam attribute.
 // off = horizontal screen shift of the scene (+ pushes the island to the right).
@@ -23,12 +29,12 @@ const PALETTES = {
   dark: {
     top: '#0b0820', mid: '#3a1f6b', glow: '#ff8a5c', low: '#2a1446', fog: '#2a1850',
     hemiSky: '#b9a6ff', hemiGround: '#4a2a3a', hemi: 1.1, sun: '#ffe2c4', sunI: 2.4, rimI: 1.4,
-    stars: 0.9, env: 0.4, exposure: 1.05, eggLight: 10, sparks: 1,
+    stars: 0.9, env: 0.4, exposure: 1.05, eggLight: 10, sparks: 1, bloom: 0.55, bloomT: 0.82, embers: 1,
   },
   light: {
-    top: '#2f8fe0', mid: '#9fd4ff', glow: '#fff0c4', low: '#d6ecff', fog: '#c4e3ff',
+    top: '#0a5fd0', mid: '#3d9ff0', glow: '#ffd98a', low: '#86c4f2', fog: '#8cc6f0',
     hemiSky: '#ffffff', hemiGround: '#7a9a6a', hemi: 1.5, sun: '#fff4e0', sunI: 3.1, rimI: 0.7,
-    stars: 0, env: 0.65, exposure: 1.0, eggLight: 5, sparks: 0.45,
+    stars: 0, env: 0.65, exposure: 1.0, eggLight: 5, sparks: 0.45, bloom: 0.18, bloomT: 0.99, embers: 0.7,
   },
 };
 for (const p of Object.values(PALETTES)) for (const k in p) if (typeof p[k] === 'string') p[k] = new THREE.Color(p[k]);
@@ -54,6 +60,16 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
 
   const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 220);
 
+  // Soft bloom for glowing eggs, lasers and embers (desktop only — skipped on phones for speed)
+  let composer = null, bloom = null;
+  if (!lowPower) {
+    composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
+    bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.55, 0.6, 0.82);
+    composer.addPass(bloom);
+    composer.addPass(new OutputPass());
+  }
+
   // ---------- Sky ----------
   const sky = new THREE.Mesh(
     new THREE.SphereGeometry(100, 32, 16),
@@ -67,12 +83,18 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
         low: { value: new THREE.Color('#2a1446') },
       },
       vertexShader: 'varying vec3 vP; void main(){ vP = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0); }',
-      fragmentShader: `uniform vec3 top, mid, glow, low; varying vec3 vP;
+      // includes tone mapping + colour-space chunks so the sky looks the same with or without bloom
+      fragmentShader: `#include <common>
+        #include <tonemapping_pars_fragment>
+        uniform vec3 top, mid, glow, low; varying vec3 vP;
         void main(){ float h = vP.y;
           vec3 c = mix(low, mid, smoothstep(-0.45, 0.0, h));
           c = mix(c, top, smoothstep(0.1, 0.7, h));
           c += glow * exp(-pow((h + 0.02) * 9.0, 2.0)) * 0.55; // thin sunset band at the horizon
-          gl_FragColor = vec4(c, 1.0); }`,
+          gl_FragColor = vec4(c, 1.0);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
+        }`,
     })
   );
   scene.add(sky);
@@ -187,16 +209,40 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
   }
 
   // Prize egg
-  const geo = eggGeometry(lowPower ? 36 : 56, lowPower ? 28 : 40);
+  // Every egg uses the silhouette extracted from your picture (src/assets/egg-profile.json)
+  const geo = profileGeometry(eggProfile.points, lowPower ? 40 : 72);
   const texSize = lowPower ? 512 : 1024;
   const featuredMats = {};
   const getFeatured = (type) => (featuredMats[type] ||= eggMaterial(type, { physical: !lowPower, size: texSize }));
-  const prize = new THREE.Mesh(geo, getFeatured('golden'));
+  // 'custom' = your egg; starts with a placeholder texture until the picture loads
+  featuredMats.custom = eggMaterial('phoenix', { physical: !lowPower, size: 512 });
+  const prize = new THREE.Mesh(geo, featuredMats.custom);
   prize.position.set(0, 1.55, 0);
   prize.scale.setScalar(1.15);
   prize.castShadow = true;
+  prize.visible = false;
   prize.userData = { kind: 'prize', jiggle: 0, pop: 0, spin: 0 };
   scene.add(prize);
+
+  // Glowing ring on the grass around the nest
+  const ringMat = new THREE.MeshBasicMaterial({ color: '#ffb347', transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const rings = [new THREE.RingGeometry(2.05, 2.16, 72), new THREE.RingGeometry(2.4, 2.44, 72)].map((g, i) => {
+    const r = new THREE.Mesh(g, ringMat);
+    r.rotation.x = -Math.PI / 2;
+    r.position.y = 0.27 + i * 0.01;
+    scene.add(r);
+    return r;
+  });
+
+  // Phoenix embers rising from the nest
+  const emberCount = lowPower ? 36 : 80;
+  const emberGeo = new THREE.BufferGeometry();
+  const emberPos = new Float32Array(emberCount * 3);
+  const emberData = [];
+  for (let i = 0; i < emberCount; i++) {
+    emberData.push({ a: Math.random() * Math.PI * 2, r: 0.4 + Math.random() * 1.1, y: Math.random() * 4, v: 0.35 + Math.random() * 0.7, w: 1 + Math.random() * 2 });
+  }
+  emberGeo.setAttribute('position', new THREE.BufferAttribute(emberPos, 3));
 
   // Glow halo behind the prize egg
   const haloTex = (() => {
@@ -250,10 +296,12 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
 
   // Distant mini islands with their own eggs
   const minis = [];
+  const miniEggs = [];
   [[-17, -3, -14, 0.38], [18, -1, -10, 0.3], [-20, 2, 8, 0.26], [14, -6, 14, 0.32], [2, 4, -24, 0.34]].forEach(([x, y, z, s], i) => {
     const g = makeIsland(0);
     g.scale.setScalar(s);
     const e = new THREE.Mesh(geo, eggMaterial(['yeti', 'trex', 'phoenix', 'pastel', 'golden'][i], { physical: false, size: 512, seed: 40 + i }));
+    miniEggs.push(e);
     e.scale.setScalar(2.4);
     e.position.y = 2.6;
     g.add(e);
@@ -336,6 +384,49 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     thieves.push(e);
   }
 
+  const embers = new THREE.Points(
+    emberGeo,
+    new THREE.PointsMaterial({ color: '#ffae42', size: 0.13, map: dotTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending })
+  );
+  scene.add(embers);
+
+  // ---------- Your egg: texture from src/assets/egg-texture.jpg (made by `npm run egg`) ----------
+  loadImage(eggTexUrl)
+    .then((img) => {
+      const tex = imageTexture(img);
+      const cm = featuredMats.custom;
+      cm.map = cm.emissiveMap = tex;
+      // the artwork already has lighting painted in → mostly self-lit, with a little real shading on top
+      cm.color.set('#7a7a7a');
+      cm.emissiveIntensity = cm.userData.baseEmissive = 0.62;
+      cm.roughness = 0.32;
+      if (cm.clearcoat !== undefined) cm.clearcoat = 0.5;
+      cm.needsUpdate = true;
+      // floating loot eggs + distant eggs become recoloured versions of your egg; jackpot = the original
+      const variants = hueVariants(img, [200, 120, 275, 320, 165, 35]);
+      pool.forEach((m, i) => {
+        m.map = m.emissiveMap = variants[i];
+        m.color.set('#8a8a8a');
+        m.emissiveIntensity = m.userData.baseEmissive = 0.45;
+        m.needsUpdate = true;
+      });
+      goldMat.map = goldMat.emissiveMap = tex;
+      goldMat.color.set('#8a8a8a');
+      goldMat.emissiveIntensity = goldMat.userData.baseEmissive = 0.5;
+      goldMat.needsUpdate = true;
+      thieves.forEach((e, i) => {
+        const base = e.userData.jackpot ? goldMat : pool[i % pool.length];
+        e.material.dispose();
+        e.material = base.clone();
+        e.material.userData = { ...base.userData };
+      });
+      miniEggs.forEach((e, i) => {
+        e.material = new THREE.MeshStandardMaterial({ map: variants[(i + 2) % variants.length], roughness: 0.35, emissive: '#ffffff', emissiveMap: variants[(i + 2) % variants.length], emissiveIntensity: 0.45, color: '#8a8a8a' });
+      });
+    })
+    .catch((err) => console.warn('Custom egg texture failed to load, using built-in egg.', err))
+    .finally(() => { prize.visible = true; });
+
   // Burst particles
   const bursts = [];
   function burst(at, color) {
@@ -371,7 +462,8 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
   }
 
   // canvas sits behind the page; listen on window and ignore events on interactive UI
-  const isUi = (el) => el.closest('a,button,input,summary,details,.panel,.nav,.hud,[data-ui]');
+  // while the disclaimer is open (html.gated) the 3D world is not interactive
+  const isUi = (el) => document.documentElement.classList.contains('gated') || el.closest('a,button,input,summary,details,.panel,.nav,.hud,[data-ui]');
   addEventListener('pointermove', (e) => {
     pointer.x = (e.clientX / innerWidth) * 2 - 1;
     pointer.y = (e.clientY / innerHeight) * 2 - 1;
@@ -454,6 +546,7 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     mobile = mq.matches;
     const w = innerWidth, h = innerHeight;
     renderer.setSize(w, h, false);
+    composer?.setSize(w, h);
     camera.aspect = w / h;
     camera.fov = w < h ? 55 : 42;
     camera.updateProjectionMatrix();
@@ -600,9 +693,24 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
       c.position.z = Math.sin(c.userData.a) * c.userData.r;
     });
     sparks.rotation.y += dt * 0.04 * motion;
+
+    // embers spiral up from the nest
+    const ep = emberGeo.attributes.position;
+    emberData.forEach((d, i) => {
+      d.y += dt * d.v * (reducedMotion ? 0.2 : 1);
+      if (d.y > 4.2) { d.y = 0; d.a = Math.random() * Math.PI * 2; }
+      const a = d.a + d.y * 0.6;
+      const r = d.r * (1 - d.y / 6);
+      ep.setXYZ(i, Math.cos(a) * r, 0.6 + d.y + Math.sin(t * d.w + i) * 0.05, Math.sin(a) * r);
+    });
+    ep.needsUpdate = true;
+    rings[0].rotation.z += dt * 0.25 * motion;
+    ringMat.opacity = 0.4 + Math.sin(t * 2.2) * 0.15;
+    rings[1].scale.setScalar(1 + Math.sin(t * 1.4) * 0.03);
     stars.rotation.y += dt * 0.004 * motion;
 
-    renderer.render(scene, camera);
+    if (composer) composer.render();
+    else renderer.render(scene, camera);
     if (firstFrame) { firstFrame(); firstFrame = null; }
   }
 
@@ -623,6 +731,8 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     sparks.material.opacity = mixN(k, 'sparks');
     scene.environmentIntensity = mixN(k, 'env');
     renderer.toneMappingExposure = mixN(k, 'exposure');
+    if (bloom) { bloom.strength = mixN(k, 'bloom'); bloom.threshold = mixN(k, 'bloomT'); }
+    embers.material.opacity = mixN(k, 'embers');
     eggBase = mixN(k, 'eggLight');
   }
   paintTheme(themeK);
@@ -640,10 +750,12 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     },
     remeasure: () => measure(sectionEls),
     setFeatured(type) {
+      // 'hero' and the Phoenix tab both show your extracted egg
+      if (type === 'hero' || type === 'phoenix') type = 'custom';
       prize.material = getFeatured(type);
       prize.userData.pop = 1;
       prize.userData.spin = 1;
-      const col = { golden: '#ffc45a', yeti: '#9fd6ff', trex: '#9cff7a', phoenix: '#ff6a2a' }[type] || '#ffc45a';
+      const col = { custom: '#ff8a2a', golden: '#ffc45a', yeti: '#9fd6ff', trex: '#9cff7a', phoenix: '#ff6a2a' }[type] || '#ffc45a';
       eggLight.color.set(col);
       halo.material.color.set(col);
       burst(prize.position, col);

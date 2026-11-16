@@ -360,3 +360,90 @@ main { position: relative; z-index: 2; }
 @media (hover: none) {
   .loop-card:hover { transform: none; }
 }
+
+/* =====================================================================
+   Disclaimer gate — shown on every visit, site hidden until "I understand"
+   ===================================================================== */
+html.gated body { overflow: hidden; }
+html.gated main, html.gated .nav, html.gated .footer, html.gated .hud, html.gated .progress, html.gated .toast { visibility: hidden; opacity: 0; }
+html.gated #world { filter: blur(6px) saturate(1.2); transform: scale(1.04); }
+main, .nav, .footer, .progress { transition: opacity 0.7s ease 0.15s, visibility 0s; }
+#world { transition: filter 0.9s ease, transform 1.2s cubic-bezier(.2, .8, .2, 1); }
+html.gated .title span { animation: none; opacity: 0; }
+main:focus { outline: none; }
+
+.consent {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: clamp(24px, 5vw, 38px);
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  color: var(--ink);
+  background: linear-gradient(160deg, rgb(var(--glass) / 0.94), rgb(var(--glass) / 0.86));
+  backdrop-filter: blur(20px) saturate(1.3);
+  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  box-shadow: 0 40px 120px -20px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgb(var(--tint) / 0.12);
+  text-align: left;
+  isolation: isolate;
+}
+.consent[open] { animation: pop-in 0.6s cubic-bezier(.3, 1.5, .5, 1) both; }
+.consent::backdrop { background: radial-gradient(circle at 50% 40%, rgba(255, 120, 40, 0.18), rgba(8, 5, 22, 0.55)); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }
+:root[data-theme='light'] .consent::backdrop { background: radial-gradient(circle at 50% 40%, rgba(255, 170, 60, 0.25), rgba(120, 160, 220, 0.35)); }
+@keyframes pop-in { from { opacity: 0; transform: translateY(24px) scale(0.94); } }
+.consent-glow { position: absolute; inset: -40% -20% auto; height: 70%; z-index: -1; background: radial-gradient(closest-side, rgba(255, 140, 50, 0.28), transparent); pointer-events: none; }
+.consent-egg {
+  width: 64px; height: 82px; margin-bottom: 16px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  background: radial-gradient(circle at 35% 28%, #fff4c0 0 10%, transparent 30%), linear-gradient(170deg, #ffd23f, #ff8a1f 45%, #e8401c 90%);
+  box-shadow: 0 0 0 6px rgba(255, 138, 31, 0.15), 0 0 50px rgba(255, 120, 30, 0.65);
+  animation: wobble 2.2s ease-in-out infinite;
+}
+.consent h2 { font-size: clamp(1.9rem, 6vw, 2.5rem); }
+.consent-body { color: var(--muted); }
+.consent-body ul { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.consent-body li { position: relative; padding-left: 26px; font-size: 0.95rem; }
+.consent-body li::before { content: ''; position: absolute; left: 4px; top: 8px; width: 10px; height: 10px; border-radius: 3px; transform: rotate(45deg); background: linear-gradient(135deg, var(--gold), var(--orange)); }
+.consent-body b { color: var(--ink); }
+.consent-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+.consent-actions .btn-gold { flex: 1 1 240px; }
+.consent-actions .btn-ghost { flex: 1 1 180px; }
+
+/* =====================================================================
+   Polish
+   ===================================================================== */
+/* gradient hairline border on glass panels */
+.panel { position: relative; }
+.panel::before {
+  content: ''; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(140deg, rgba(255, 201, 60, 0.55), rgba(255, 95, 162, 0.25) 40%, transparent 65%, rgba(143, 211, 255, 0.35));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  opacity: 0.7; transition: opacity 0.3s;
+}
+.panel:hover::before { opacity: 1; }
+.stat, .pass { transition: transform 0.35s cubic-bezier(.3, 1.5, .5, 1), box-shadow 0.35s; }
+.stat:hover, .pass:hover { transform: translateY(-4px); box-shadow: 0 26px 60px -24px rgba(255, 140, 40, 0.45); }
+
+/* shimmering gold headline */
+.t2 { background-size: 100% 220%; animation: drop 0.9s cubic-bezier(.3, 1.5, .5, 1) both 0.3s, shimmer 5s ease-in-out infinite 1.4s; }
+@keyframes shimmer { 0%, 100% { background-position: 50% 0%; } 50% { background-position: 50% 100%; } }
+
+/* headings get a short gradient underline */
+.panel h2::after, .section-head h2::after { content: ''; display: block; width: 56px; height: 5px; margin-top: 12px; border-radius: 99px; background: linear-gradient(90deg, var(--gold), var(--orange), var(--pink)); }
+
+/* marquee band */
+.ticker { position: relative; z-index: 2; overflow: hidden; transform: rotate(-2deg); margin: -10px -10px 0; padding: 14px 0; background: linear-gradient(90deg, var(--gold), var(--orange), var(--pink)); box-shadow: 0 18px 50px -20px rgba(255, 110, 60, 0.7); pointer-events: none; }
+.ticker-track { display: flex; align-items: center; gap: 28px; width: max-content; animation: marquee 22s linear infinite; }
+.ticker span { font-family: var(--display); font-size: clamp(1.4rem, 3vw, 2.2rem); color: #2a1200; text-transform: uppercase; letter-spacing: 0.04em; }
+.ticker i { width: 18px; height: 23px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: #2a1200; opacity: 0.85; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* scrollbar */
+html { scrollbar-color: var(--orange) transparent; scrollbar-width: thin; }
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-thumb { background: linear-gradient(var(--gold), var(--orange)); border-radius: 99px; border: 2px solid var(--bg); }
+::selection { background: var(--gold); color: #2a1200; }
+
+/* keep the tilted ticker from causing sideways scroll */
+main { overflow-x: clip; }

@@ -15,6 +15,8 @@
       var dark = pref === 'dark' || (pref === 'system' && !matchMedia('(prefers-color-scheme: light)').matches);
       document.documentElement.dataset.theme = dark ? 'dark' : 'light';
       document.documentElement.dataset.themePref = pref;
+      // Disclaimer gate: shown on every visit; the site stays hidden until the visitor agrees.
+      document.documentElement.classList.add('gated');
     })();
   </script>
   <meta property="og:title" content="Steal An Egg — Fan Guide" />
@@ -26,6 +28,25 @@
   <link href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
 </head>
 <body>
+  <dialog class="consent" id="consent" aria-labelledby="consent-title" aria-describedby="consent-desc">
+    <div class="consent-glow" aria-hidden="true"></div>
+    <div class="consent-egg" aria-hidden="true"></div>
+    <p class="tag tag-hot">Unofficial · Fan-made · Demo</p>
+    <h2 id="consent-title">Before you sneak in…</h2>
+    <div id="consent-desc" class="consent-body">
+      <p>This is an <b>unofficial fan-made website</b>, built <b>for demo purposes only</b>.</p>
+      <ul>
+        <li>It is <b>not</b> the official Steal An Egg site and is not affiliated with, endorsed or sponsored by Roblox Corporation or the game's developers.</li>
+        <li>Game names, egg designs and artwork belong to their respective owners.</li>
+        <li>Stats and guide info may be incomplete or out of date.</li>
+      </ul>
+    </div>
+    <div class="consent-actions">
+      <button type="button" class="btn btn-gold btn-lg" id="consent-agree" autofocus>I understand, let me in</button>
+      <a class="btn btn-ghost" href="https://www.roblox.com/games/107778070777162" rel="noopener">Go to the official game</a>
+    </div>
+  </dialog>
+
   <a class="skip" href="#main">Skip to content</a>
   <div class="progress" id="progress" aria-hidden="true"></div>
   <canvas id="world" aria-hidden="true"></canvas>
@@ -65,7 +86,7 @@
     </button>
   </header>
 
-  <main id="main">
+  <main id="main" tabindex="-1">
     <!-- HERO -->
     <section id="top" class="scene hero" data-cam="hero">
       <div class="hero-copy">
@@ -91,6 +112,13 @@
       <p class="hint" data-ui><span class="hint-egg"></span>Tap the floating eggs to steal them. The golden one in the nest is guarded…</p>
       <a class="scroll-cue" href="#event" aria-label="Scroll to latest event"><span></span></a>
     </section>
+
+    <div class="ticker" aria-hidden="true">
+      <div class="ticker-track">
+        <span>Steal</span><i></i><span>Hatch</span><i></i><span>Earn</span><i></i><span>Train</span><i></i><span>Raid</span><i></i>
+        <span>Steal</span><i></i><span>Hatch</span><i></i><span>Earn</span><i></i><span>Train</span><i></i><span>Raid</span><i></i>
+      </div>
+    </div>
 
     <!-- EVENT -->
     <section id="event" class="scene align-right" data-cam="event">
@@ -174,15 +202,16 @@
         <p class="tag">Egg index</p>
         <h2>Known eggs</h2>
         <div class="egg-tabs" role="tablist" aria-label="Choose an egg">
-          <button role="tab" aria-selected="true" data-egg="yeti" style="--c:#9fd6ff">Yeti</button>
+          <button role="tab" aria-selected="true" data-egg="phoenix" style="--c:#ff7a3a">Eternal Phoenix</button>
+          <button role="tab" aria-selected="false" data-egg="yeti" style="--c:#9fd6ff">Yeti</button>
           <button role="tab" aria-selected="false" data-egg="trex" style="--c:#8ee26a">Trex</button>
-          <button role="tab" aria-selected="false" data-egg="phoenix" style="--c:#ff7a3a">Eternal Phoenix</button>
+          
         </div>
         <div class="egg-info" id="egg-info" role="tabpanel" aria-live="polite">
-          <h3 id="egg-name">Yeti Egg</h3>
-          <p id="egg-desc">Frosty fur and an ice-crystal crown.</p>
+          <h3 id="egg-name">Eternal Phoenix Egg</h3>
+          <p id="egg-desc">Fiery orange shell with flame wings. This 3D model is generated from egg artwork.</p>
         </div>
-        <p class="note">Egg names come from official artwork only. Availability, rarity, odds and location are <b>not verified</b>. The 3D eggs here are our own fan renders.</p>
+        <p class="note">Egg names come from official artwork only. Availability, rarity, odds and location are <b>not verified</b>. The Phoenix model is generated from artwork for demo purposes. The others are fan renders.</p>
       </div>
     </section>
 

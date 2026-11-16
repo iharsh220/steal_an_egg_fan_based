@@ -4,6 +4,7 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 let world = null;
+const root = document.documentElement;
 
 // ---------- Safe storage (private mode / blocked storage) ----------
 const store = {
@@ -11,8 +12,23 @@ const store = {
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch { /* ignore */ } },
 };
 
+// ---------- Disclaimer gate (every visit) ----------
+const consent = document.getElementById('consent');
+function enterSite() {
+  root.classList.remove('gated');
+  if (consent.open) consent.close();
+  world?.remeasure();
+  document.getElementById('main').focus({ preventScroll: true });
+}
+if (root.classList.contains('gated') && consent?.showModal) {
+  consent.showModal();
+  consent.addEventListener('cancel', (e) => e.preventDefault()); // Esc can't skip it
+  document.getElementById('consent-agree').addEventListener('click', enterSite);
+} else {
+  root.classList.remove('gated');
+}
+
 // ---------- Theme: system (follows the device), light or dark ----------
-const root = document.documentElement;
 const sysLight = matchMedia('(prefers-color-scheme: light)');
 const metaTheme = document.querySelector('meta[name="theme-color"]');
 let themePref = root.dataset.themePref || 'system';
@@ -22,10 +38,10 @@ function applyTheme() {
   root.dataset.theme = theme;
   root.dataset.themePref = themePref;
   metaTheme?.setAttribute('content', theme === 'light' ? '#e4f2ff' : '#140f2e');
-  $$('[data-theme-pref]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.themePref === themePref)));
+  $$('#theme-switch [data-theme-pref]').forEach((b) => b.setAttribute('aria-checked', String(b.dataset.themePref === themePref)));
   world?.setTheme(theme);
 }
-$$('[data-theme-pref]').forEach((btn) => {
+$$('#theme-switch [data-theme-pref]').forEach((btn) => {
   btn.addEventListener('click', () => {
     themePref = btn.dataset.themePref;
     try { localStorage.setItem('sae-theme', themePref); } catch { /* ignore */ }
@@ -37,7 +53,7 @@ $$('[data-theme-pref]').forEach((btn) => {
 // arrow-key support inside the radiogroup
 $('#theme-switch').addEventListener('keydown', (e) => {
   if (!['ArrowLeft', 'ArrowRight'].includes(e.key)) return;
-  const btns = $$('[data-theme-pref]');
+  const btns = $$('#theme-switch [data-theme-pref]');
   const i = btns.findIndex((b) => b.dataset.themePref === themePref);
   const next = btns[(i + (e.key === 'ArrowRight' ? 1 : btns.length - 1)) % btns.length];
   next.click();
@@ -169,7 +185,7 @@ function onGuarded() {
 const EGGS = {
   yeti: { name: 'Yeti Egg', desc: 'Frosty fur and an ice-crystal crown.' },
   trex: { name: 'Trex Egg', desc: 'Scaly green shell with orange spots and a row of teeth.' },
-  phoenix: { name: 'Eternal Phoenix Egg', desc: 'A shell that burns from crimson to gold.' },
+  phoenix: { name: 'Eternal Phoenix Egg', desc: 'Fiery orange shell with flame wings. This 3D model is generated from egg artwork.' },
 };
 
 // ---------- 3D world (lazy-loaded so text paints first) ----------
@@ -218,7 +234,7 @@ let eggsVisible = false;
 new IntersectionObserver(([en]) => {
   if (en.isIntersecting === eggsVisible || !world) return;
   eggsVisible = en.isIntersecting;
-  world.setFeatured(eggsVisible ? $('[data-egg][aria-selected="true"]').dataset.egg : 'golden');
+  world.setFeatured(eggsVisible ? $('[data-egg][aria-selected="true"]').dataset.egg : 'hero');
 }, { threshold: 0.35 }).observe($('#eggs'));
 
 $('#year').textContent = new Date().getFullYear();

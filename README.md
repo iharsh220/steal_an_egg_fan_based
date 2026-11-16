@@ -5,7 +5,10 @@ Interactive 3D fan site for the Roblox game **Steal An Egg**, built with **Three
 ## Features
 - Full-screen 3D floating island with a guarded prize egg. The camera flies to a new shot for each section as you scroll.
 - Mini-game: tap or click the floating eggs to steal them. It tracks a counter and ranks, and golden eggs give a +5 jackpot. The count is saved in the browser.
-- Egg Index: the nest egg turns into the Yeti, Trex or Eternal Phoenix egg. All eggs are procedural (no external assets).
+- Disclaimer popup on every visit: the site appears only after the visitor accepts that it is an unofficial fan-made demo.
+- Picture-to-3D egg: `npm run egg` builds the 3D egg (shape and texture) from `egg-source/egg.jpeg`. The nest egg, the Phoenix tab and the recoloured floating eggs all use it.
+- Egg Index: switch the nest egg between Eternal Phoenix (your egg), Yeti and Trex.
+- Bloom glow, rising embers and a glowing ring (desktop), plus a marquee band and gradient-bordered glass panels.
 - Live stats come from `/api/stats` (players, visits, favorites, rating). If Roblox can't be reached, the page shows the last snapshot.
 - Theme: **System** (follows the device), **Light** (daytime sky) or **Dark** (night sky). The choice is saved, and the page doesn't flash the wrong theme while loading.
 - Responsive and mobile-friendly. Lower GPU settings on phones, respects reduced motion, and has a fallback if WebGL isn't available.
@@ -16,6 +19,7 @@ npm install
 npm run dev        # http://localhost:5173  (the /api/stats function also runs locally)
 npm run build      # outputs to dist/
 npm run preview
+npm run egg        # rebuild the 3D egg from egg-source/egg.jpeg (or: npm run egg -- my-egg.png)
 ```
 
 ## Deploy to Netlify

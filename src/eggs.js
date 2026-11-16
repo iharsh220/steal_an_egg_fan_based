@@ -230,3 +230,59 @@ export function eggMaterial(type, { seed = 7, physical = true, size = 1024 } = {
   m.userData.baseEmissive = look.emissive;
   return m;
 }
+
+// ---------- Custom egg from a picture (see scripts/extract-egg.mjs) ----------
+// Builds the 3D shape from the extracted silhouette profile ([radius, y] points, bottom → top).
+export function profileGeometry(points, seg = 64) {
+  const g = new THREE.LatheGeometry(points.map(([r, y]) => new THREE.Vector2(r, y)), seg);
+  g.computeVertexNormals();
+  return g;
+}
+
+export function loadImage(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
+export function imageTexture(img) {
+  const t = new THREE.Texture(img);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.wrapS = THREE.RepeatWrapping;
+  t.anisotropy = 8;
+  t.needsUpdate = true;
+  return t;
+}
+
+// Recoloured copies of the egg texture (same matrix as CSS hue-rotate, works in every browser).
+export function hueVariants(img, degrees, w = 512, h = 256) {
+  return degrees.map((deg) => {
+    const c = document.createElement('canvas');
+    c.width = w;
+    c.height = h;
+    const ctx = c.getContext('2d', { willReadFrequently: true });
+    ctx.drawImage(img, 0, 0, w, h);
+    const d = ctx.getImageData(0, 0, w, h);
+    const a = (deg * Math.PI) / 180, cs = Math.cos(a), sn = Math.sin(a);
+    const m = [
+      0.213 + cs * 0.787 - sn * 0.213, 0.715 - cs * 0.715 - sn * 0.715, 0.072 - cs * 0.072 + sn * 0.928,
+      0.213 - cs * 0.213 + sn * 0.143, 0.715 + cs * 0.285 + sn * 0.14, 0.072 - cs * 0.072 - sn * 0.283,
+      0.213 - cs * 0.213 - sn * 0.787, 0.715 - cs * 0.715 + sn * 0.715, 0.072 + cs * 0.928 + sn * 0.072,
+    ];
+    const p = d.data;
+    for (let i = 0; i < p.length; i += 4) {
+      const r = p[i], g = p[i + 1], b = p[i + 2];
+      p[i] = m[0] * r + m[1] * g + m[2] * b;
+      p[i + 1] = m[3] * r + m[4] * g + m[5] * b;
+      p[i + 2] = m[6] * r + m[7] * g + m[8] * b;
+    }
+    ctx.putImageData(d, 0, 0);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.wrapS = THREE.RepeatWrapping;
+    return t;
+  });
+}
