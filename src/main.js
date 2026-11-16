@@ -167,12 +167,10 @@ async function loadStats() {
     if (res.ok && (res.headers.get('content-type') || '').includes('json')) data = await res.json();
   } catch { /* offline: keep the HTML snapshot */ }
   if (!data) return;
-  // live badge award counts + pass prices
+  // live badge award counts.
+  // Game-pass prices are NOT overwritten live: the Roblox API returns the base (US) price, while
+  // players see regional prices. The price shown is whatever is set in src/data/roblox.json.
   if (data.badges) $$('[data-badge-awards]').forEach((el) => { const b = data.badges[el.dataset.badgeAwards]; if (b?.awarded) el.textContent = nf.format(b.awarded); });
-  if (data.passes) {
-    $$('[data-pass-price]').forEach((el) => { const p = data.passes[el.dataset.passPrice]; if (p?.price) el.textContent = nf.format(p.price); });
-    $$('[data-pass-checked]').forEach((el) => (el.textContent = `Checked live · ${fmtDate(new Date().toISOString())}`));
-  }
   $$('[data-date="updated"]').forEach((el) => data.updated && (el.textContent = fmtDate(data.updated)));
   if (data.live) $$('[data-checked]').forEach((el) => (el.textContent = `Live from Roblox · ${fmtDate(new Date().toISOString())}`));
   const badge = $('#stats-badge');

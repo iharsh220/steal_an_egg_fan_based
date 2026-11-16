@@ -44,9 +44,13 @@ for (const b of badges) {
 const passes = (await json(`https://apis.roblox.com/game-passes/v1/universes/${UNIVERSE}/game-passes?passView=Full&pageSize=50`)).gamePasses;
 const pIcons = Object.fromEntries((await json(`https://thumbnails.roblox.com/v1/game-passes?gamePassIds=${passes.map((p) => p.id).join(',')}&size=150x150&format=Png&isCircular=false`)).data.map((d) => [d.targetId, d.imageUrl]));
 const passOut = [];
+// Keep prices you set by hand in src/data/roblox.json (Roblox's API gives the base US price,
+// players see regional prices) — only new passes take the API price.
+const manualPrice = {};
+try { for (const old of JSON.parse(fs.readFileSync('src/data/roblox.json', 'utf8')).passes || []) manualPrice[old.id] = old.price; } catch { /* first run */ }
 for (const p of passes) {
   passOut.push({
-    id: p.id, name: p.name, desc: p.displayDescription, price: p.price, forSale: p.isForSale,
+    id: p.id, name: p.name, desc: p.displayDescription, price: manualPrice[p.id] ?? p.price, forSale: p.isForSale,
     icon: pIcons[p.id] ? await save(pIcons[p.id], `/images/passes/${slug(p.name)}.png`) : null,
     url: `https://www.roblox.com/game-pass/${p.id}/${slug(p.name)}`,
   });
