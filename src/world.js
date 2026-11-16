@@ -7,6 +7,9 @@ import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { eggMaterial, profileGeometry, loadImage, imageTexture, hueVariants } from './eggs.js';
 import eggProfile from './assets/egg-profile.json';
 import eggTexUrl from './assets/egg-texture.jpg';
+import { createHatch } from './hatch.js';
+import angelWhiteUrl from './assets/archangel-white.png';
+import angelBlackUrl from './assets/archangel-black.png';
 
 // Camera stops, keyed by each section's data-cam attribute.
 // off = horizontal screen shift of the scene (+ pushes the island to the right).
@@ -48,7 +51,7 @@ const PALETTES = {
 };
 for (const p of Object.values(PALETTES)) for (const k in p) if (typeof p[k] === 'string') p[k] = new THREE.Color(p[k]);
 
-export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, reducedMotion = false, theme = 'dark' } = {}) {
+export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, onAngel = () => {}, reducedMotion = false, theme = 'dark' } = {}) {
   const mq = matchMedia('(max-width: 820px)');
   let mobile = mq.matches;
   const lowPower = mobile || (navigator.hardwareConcurrency || 8) <= 4;
@@ -398,6 +401,14 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
   );
   scene.add(embers);
 
+  // ---------- Scroll-driven hatch: egg cracks → bursts → ArchAngel rises (src/hatch.js) ----------
+  const hatch = createHatch({
+    scene, prize, geo, profile: eggProfile, eggMaterial: featuredMats.custom, dotTex, lowPower,
+    angelUrls: { white: angelWhiteUrl, black: angelBlackUrl },
+  });
+  let hatchP = 0;      // smoothed progress 0…1
+  let hatchHold = false; // true while the 3D egg viewer is on screen → egg re-forms
+
   // ---------- Your egg: texture from src/assets/egg-texture.jpg (made by `npm run egg`) ----------
   loadImage(eggTexUrl)
     .then((img) => {
@@ -433,7 +444,7 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
       });
     })
     .catch((err) => console.warn('Custom egg texture failed to load, using built-in egg.', err))
-    .finally(() => { prize.visible = true; });
+    .finally(() => { prize.userData.ready = true; });
 
   // Burst particles
   const bursts = [];
@@ -464,7 +475,7 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
   function pick(clientX, clientY) {
     ndc.set((clientX / innerWidth) * 2 - 1, -(clientY / innerHeight) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const targets = [prize, ...thieves.filter((t) => t.userData.state === 'idle')];
+    const targets = [...(prize.visible ? [prize] : []), ...hatch.targets.filter((a) => a.visible), ...thieves.filter((t) => t.userData.state === 'idle')];
     const hit = ray.intersectObjects(targets, false)[0];
     return hit ? hit.object : null;
   }
@@ -486,6 +497,12 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     if (moved > 12 || performance.now() - downAt.t > 600) return;
     const obj = pick(e.clientX, e.clientY);
     if (!obj) return;
+    if (hatch.targets.includes(obj)) {
+      hatch.pulse();
+      burst(new THREE.Vector3(0, 2.6, 0), '#fff1c4');
+      onAngel();
+      return;
+    }
     if (obj === prize) {
       prize.userData.jiggle = 1;
       alarm = 1;
@@ -617,6 +634,13 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
     halo.position.y = prize.position.y;
     halo.material.opacity = 0.75 + Math.sin(t * 2) * 0.15;
     eggLight.intensity = eggBase * (1 + Math.sin(t * 2) * 0.2);
+
+    // hatch progress follows the scroll through the hero (scrubbable both ways)
+    const hatchWant = hatchHold ? 0 : THREE.MathUtils.clamp(scrollY / (innerHeight * 0.85), 0, 1);
+    hatchP += (hatchWant - hatchP) * Math.min(1, dt * (reducedMotion ? 30 : 6));
+    if (Math.abs(hatchWant - hatchP) < 0.0005) hatchP = hatchWant;
+    hatch.update(hatchP, t, dt, themeK, motion, eggLight, halo, camera);
+    prize.visible = !!prize.userData.ready && !prize.userData.hatched;
 
     // lasers
     alarm = Math.max(0, alarm - dt * 0.7);
@@ -757,6 +781,7 @@ export function createWorld(canvas, { onSteal = () => {}, onGuarded = () => {}, 
       renderer.setAnimationLoop(frame);
     },
     remeasure: () => measure(sectionEls),
+    setHatchHold(v) { hatchHold = !!v; },
     setFeatured(type) {
       // 'hero' and the Phoenix tab both show your extracted egg
       if (type === 'hero' || type === 'phoenix') type = 'custom';

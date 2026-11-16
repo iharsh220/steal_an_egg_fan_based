@@ -233,6 +233,10 @@ function onSteal({ jackpot, value }) {
   else if (jackpot) toast('✨ <b>Golden egg!</b> +5', 'gold');
   $('.hint')?.classList.add('done');
 }
+function onAngel() {
+  const name = root.dataset.theme === 'light' ? 'Fractured ArchAngel' : 'Silver ArchAngel';
+  toast(`✨ <b>Divine · ${name}</b> hatched!`, 'gold');
+}
 let guardedCount = 0;
 function onGuarded() {
   const lines = ['🚨 Lasers armed! That one\'s guarded.', '🚨 Nice try. Grab the floating ones!', '🚨 Security says no.'];
@@ -260,7 +264,7 @@ function webglOk() {
 if (webglOk()) {
   import('./world.js')
     .then(({ createWorld }) => {
-      world = createWorld($('#world'), { onSteal, onGuarded, reducedMotion, theme: root.dataset.theme });
+      world = createWorld($('#world'), { onSteal, onGuarded, onAngel, reducedMotion, theme: root.dataset.theme });
       world.start($$('[data-cam]'), hideLoader);
       // fonts/images can shift layout — remeasure camera anchors once settled
       document.fonts?.ready.then(() => world.remeasure());
@@ -298,6 +302,7 @@ let eggsVisible = false;
 new IntersectionObserver(([en]) => {
   if (en.isIntersecting === eggsVisible || !world) return;
   eggsVisible = en.isIntersecting;
+  world.setHatchHold(eggsVisible); // egg re-forms in the 3D viewer
   world.setFeatured(eggsVisible ? $('[data-egg][aria-selected="true"]').dataset.egg : 'hero');
 }, { threshold: 0.35 }).observe($('#eggs'));
 

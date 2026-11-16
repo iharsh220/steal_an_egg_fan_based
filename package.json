@@ -9,7 +9,9 @@
     "build": "vite build",
     "preview": "vite preview",
     "egg": "node scripts/extract-egg.mjs",
-    "assets": "node scripts/fetch-roblox-assets.mjs"
+    "assets": "node scripts/fetch-roblox-assets.mjs",
+    "archangel": "node scripts/extract-archangel.mjs",
+    "archangel:masks": "swift scripts/lift-subject.swift egg-source/arcangel_white.jpeg egg-source/masks/arcangel_white && swift scripts/lift-subject.swift egg-source/arcangel_black.jpeg egg-source/masks/arcangel_black"
   },
   "dependencies": {
     "three": "0.170.0"
